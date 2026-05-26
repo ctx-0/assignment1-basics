@@ -25,6 +25,11 @@ def get_byte_pair_freq(d):
     return byte_pair_freq
 
 
+def get_best_pair(byte_pair_freq):
+    # best_pair = max(byte_pair_freq, key=byte_pair_freq.get)
+    return max(byte_pair_freq.items(), key=lambda x: (x[1], x[0]))[0]
+
+
 def merge(d, best_pair, vocab_idx):
     new_d = defaultdict(int)
 
@@ -52,12 +57,13 @@ def train(corpus, special_tokens, loops):
     merges = []
 
     d = get_pre_token_freq(pre_tokens)
-    byte_pair_freq = get_byte_pair_freq(d)
-    if not byte_pair_freq: # edge case
-        return vocab, vocab_idx, merges
-    best_pair = max(byte_pair_freq, key=byte_pair_freq.get)
 
     for i in range(loops):
+        byte_pair_freq = get_byte_pair_freq(d)
+        if not byte_pair_freq:  # edge case
+            return vocab, vocab_idx, merges
+        best_pair = get_best_pair(byte_pair_freq)
+
         print(f"{i}th merge:", best_pair, vocab[best_pair[0]], vocab[best_pair[1]])
 
         merges.append(best_pair)
