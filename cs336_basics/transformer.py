@@ -1,6 +1,7 @@
 import math
 
 import torch
+from torch import nn
 from einops import einsum, rearrange
 
 # -- linear layer
@@ -55,3 +56,25 @@ class RMSNorm(torch.nn.Module):
 
         res = self.W * x_normed
         return res.to(in_dtype)
+
+
+# SiLU
+def SiLU(x: torch.Tensor):
+    return x * torch.sigmoid(x)
+
+
+# GLU
+class SwiGLU(torch.nn.Module):
+    def __init__(self, d_model):
+        super().__init__()
+
+        # d_ff = int(d_model * (8 / 3))
+        d_ff = 64 * math.ceil(8 * d_model / (3 * 64))
+
+        self.W1 = nn.Linear(d_model, d_ff, bias=False)
+        self.W2 = nn.Linear(d_ff, d_model, bias=False)
+        self.W3 = nn.Linear(d_model, d_ff, bias=False)
+
+    def forward(self, x: torch.Tensor):
+        hidden = SiLU(self.W1(x)) * self.W3(x)
+        return self.W2(hidden)
